@@ -1,10 +1,22 @@
 import { Button} from "../../../components/ui/button"
+import {
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+    CardDescription
+  } from "../../../components/ui/card"
 import {UserButton} from "@clerk/nextjs"
 import { CalendarPlus, CalendarRange } from "lucide-react"
 import Link from "next/link"
 import {db} from "../../../drizzle/db"
 import { auth } from "@clerk/nextjs/server"
 import { RedirectToSignIn } from "@clerk/nextjs"
+import { formatEventDescription } from "../../../lib/formatters"
+import { CopyEventButton } from "../../../components/CopyEventButton"
+import { cn } from "../../../lib/utils"
+
 
 
 
@@ -31,8 +43,15 @@ import { RedirectToSignIn } from "@clerk/nextjs"
             </Link>
             </Button>
         </div>
-        <div>
-            {events.length > 0? (<h1>Events jii</h1>): (
+        
+            {events.length > 0? (
+                <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(400px,1fr))]">
+                              {events.map(event=>(  
+                                <EventCard key={event.id} {...event} />
+                            ))}
+                        </div>
+                        
+                ): (
                <div className="flex flex-col items-center gap-4">
                 <CalendarRange className="size-16 mx-auto"/>
                 You do not have any events yet. Create your first event to get started!
@@ -45,7 +64,40 @@ import { RedirectToSignIn } from "@clerk/nextjs"
             )
             }
         </div>
-        </div>
+        
     )
 
+    }
+
+    type EventCardProps = {
+        id: string
+        isActive: boolean
+        name: string
+        description: string | null
+        durationInMinutes: number
+        clerkUserId: string
+      }
+
+    function EventCard({
+        id,
+        isActive,
+        name, description, durationInMinutes,clerkUserId 
+
+    }: EventCardProps) {
+        return (
+            <Card className={cn("flex flex-col", !isActive && "border-secondary/50")}>
+                <CardHeader className={cn(!isActive && "opacity-50")}>
+                    <CardTitle>{name}</CardTitle>
+                    <CardDescription>{formatEventDescription(durationInMinutes)}
+                    </CardDescription>
+                </CardHeader>
+                {description != null && <CardContent className={cn(!isActive && "opacity-50")}>{description}</CardContent>}
+                <CardFooter className="flex justify-end gap-2 mt-auto">
+                    {isActive && (<CopyEventButton variant="outline" eventId={id} clerkUserId={clerkUserId}/> )}
+                    <Button asChild>
+                        <Link href={`/events/${id}/edit`}>Edit</Link>
+                    </Button>
+                </CardFooter>
+            </Card>
+        )
     }
