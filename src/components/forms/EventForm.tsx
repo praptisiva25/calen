@@ -31,6 +31,7 @@ import {
     AlertDialogAction,
   } from "../../components/ui/alert-dialog"
   import { useState, useTransition } from "react"
+  import { deleteEvent } from "../../server/actions/events"
 
 
 
@@ -50,6 +51,7 @@ export default function EventForm({
       isActive: boolean
     }
   }) {
+    const [isDeletePending, startDeleteTransition] = useTransition()
     const form = useForm<z.infer<typeof eventFormSchema>>({
       resolver: zodResolver(eventFormSchema),
       defaultValues: event ?? {
@@ -147,12 +149,50 @@ export default function EventForm({
               </FormItem>
             )}
           />
-          <div>
-            <Button type="button" asChild variant="outline">
-              <Link href="/events">Cancel</Link>
-            </Button>
-            <Button type="submit">Save</Button>
-          </div>
+          <div className="flex gap-2 justify-end">
+  {event && (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="destructiveGhost" disabled={isDeletePending || form.formState.isSubmitting}>
+          Delete
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete your event.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={isDeletePending || form.formState.isSubmitting}
+            variant="destructive"
+            onClick={() => {
+              startDeleteTransition(async () => {
+                const data = await deleteEvent(event.id);
+
+                if (data?.error) {
+                  form.setError("root", {
+                    message: "There was an error deleting your event",
+                  });
+                }
+              });
+            }}
+          >
+            Delete
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )}
+  <Button type="button" asChild variant="outline">
+    <Link href="/events">Cancel</Link>
+  </Button>
+  <Button type="submit">Save</Button>
+</div>
+
         </form>
       </Form>
     )
