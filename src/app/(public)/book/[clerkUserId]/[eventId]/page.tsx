@@ -1,6 +1,7 @@
-export default function BookEventPage()
-{
+export default function BookEventPage() {
     return (
-        <div>Hi</div>
+        <div>
+            Hi
+        </div>
     )
 }
