@@ -1,4 +1,4 @@
-import { db } from "@/drizzle/db"
+import { db } from "../../../../drizzle/db"
 import { notFound } from "next/navigation"
 import { clerkClient } from "@clerk/nextjs/server"
 import { Button } from "../../../../components/ui/button"
