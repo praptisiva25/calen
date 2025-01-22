@@ -1,7 +1,7 @@
-import { DAYS_OF_WEEK_IN_ORDER } from "../data/constants"
-import { db } from "../drizzle/db"
-import { ScheduleAvailabilityTable } from "../drizzle/schema"
-import { getCalendarEventTimes } from "../server/googleCalendar"
+import { DAYS_OF_WEEK_IN_ORDER } from "../data/constants";
+import { db } from "../drizzle/db";
+import { ScheduleAvailabilityTable } from "../drizzle/schema";
+import { getCalendarEventTimes } from "../server/googleCalendar";
 import {
   addMinutes,
   areIntervalsOverlapping,
@@ -15,59 +15,71 @@ import {
   isWithinInterval,
   setHours,
   setMinutes,
-} from "date-fns"
-import { fromZonedTime } from "date-fns-tz"
+} from "date-fns";
+import { fromZonedTime } from "date-fns-tz";
+
+function groupBy(array: any[], keyFn: { (a: any): any; (arg0: any): any; }) {
+  return array.reduce((acc, item) => {
+    const key = keyFn(item);
+    if (!acc[key]) {
+      acc[key] = [];
+    }
+    acc[key].push(item);
+    return acc;
+  }, {});
+}
 
 export async function getValidTimesFromSchedule(
   timesInOrder: Date[],
   event: { clerkUserId: string; durationInMinutes: number }
 ) {
-  const start = timesInOrder[0]
-  const end = timesInOrder.at(-1)
+  const start = timesInOrder[0];
+  const end = timesInOrder.at(-1);
 
-  if (start == null || end == null) return []
+  if (start == null || end == null) return [];
 
   const schedule = await db.query.ScheduleTable.findFirst({
     where: ({ clerkUserId: userIdCol }, { eq }) =>
       eq(userIdCol, event.clerkUserId),
     with: { availabilities: true },
-  })
+  });
 
-  if (schedule == null) return []
+  if (schedule == null) return [];
 
-  const groupedAvailabilities = Object.groupBy(
+  // Replace Object.groupBy with the custom groupBy function
+  const groupedAvailabilities = groupBy(
     schedule.availabilities,
-    a => a.dayOfWeek
-  )
+    (a) => a.dayOfWeek
+  );
 
   const eventTimes = await getCalendarEventTimes(event.clerkUserId, {
     start,
     end,
-  })
+  });
 
-  return timesInOrder.filter(intervalDate => {
+  return timesInOrder.filter((intervalDate) => {
     const availabilities = getAvailabilities(
       groupedAvailabilities,
       intervalDate,
       schedule.timezone
-    )
+    );
     const eventInterval = {
       start: intervalDate,
       end: addMinutes(intervalDate, event.durationInMinutes),
-    }
+    };
 
     return (
-      eventTimes.every(eventTime => {
-        return !areIntervalsOverlapping(eventTime, eventInterval)
+      eventTimes.every((eventTime) => {
+        return !areIntervalsOverlapping(eventTime, eventInterval);
       }) &&
-      availabilities.some(availability => {
+      availabilities.some((availability) => {
         return (
           isWithinInterval(eventInterval.start, availability) &&
           isWithinInterval(eventInterval.end, availability)
-        )
+        );
       })
-    )
-  })
+    );
+  });
 }
 
 function getAvailabilities(
@@ -82,31 +94,31 @@ function getAvailabilities(
 ) {
   let availabilities:
     | (typeof ScheduleAvailabilityTable.$inferSelect)[]
-    | undefined
+    | undefined;
 
   if (isMonday(date)) {
-    availabilities = groupedAvailabilities.monday
+    availabilities = groupedAvailabilities.monday;
   }
   if (isTuesday(date)) {
-    availabilities = groupedAvailabilities.tuesday
+    availabilities = groupedAvailabilities.tuesday;
   }
   if (isWednesday(date)) {
-    availabilities = groupedAvailabilities.wednesday
+    availabilities = groupedAvailabilities.wednesday;
   }
   if (isThursday(date)) {
-    availabilities = groupedAvailabilities.thursday
+    availabilities = groupedAvailabilities.thursday;
   }
   if (isFriday(date)) {
-    availabilities = groupedAvailabilities.friday
+    availabilities = groupedAvailabilities.friday;
   }
   if (isSaturday(date)) {
-    availabilities = groupedAvailabilities.saturday
+    availabilities = groupedAvailabilities.saturday;
   }
   if (isSunday(date)) {
-    availabilities = groupedAvailabilities.sunday
+    availabilities = groupedAvailabilities.sunday;
   }
 
-  if (availabilities == null) return []
+  if (availabilities == null) return [];
 
   return availabilities.map(({ startTime, endTime }) => {
     const start = fromZonedTime(
@@ -115,7 +127,7 @@ function getAvailabilities(
         parseInt(startTime.split(":")[1])
       ),
       timezone
-    )
+    );
 
     const end = fromZonedTime(
       setMinutes(
@@ -123,8 +135,8 @@ function getAvailabilities(
         parseInt(endTime.split(":")[1])
       ),
       timezone
-    )
+    );
 
-    return { start, end }
-  })
+    return { start, end };
+  });
 }

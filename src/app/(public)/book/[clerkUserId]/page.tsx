@@ -13,6 +13,9 @@ import {
 import Link from "next/link"
 import { formatEventDescription } from "../../../../lib/formatters"
 
+export const revalidate = 0
+
+
 export default async function BookingPage({
     params: { clerkUserId },
 }: {
