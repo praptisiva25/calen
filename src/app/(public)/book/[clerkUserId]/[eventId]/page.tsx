@@ -1,4 +1,4 @@
-// import { MeetingForm } from "@/components/forms/MeetingForm"
+ import { MeetingForm } from "../../../../../components/forms/MeetingForm"
 import { Button } from "../../../../../components/ui/button";
 import {
   Card,
@@ -41,7 +41,7 @@ export default async function BookEventPage({
   // Fetch the user from Clerk
   let calendarUser;
   try {
-    calendarUser = await clerkClient.users.getUser(clerkUserId);
+    calendarUser = await (await clerkClient()).users.getUser(clerkUserId);
   } catch (error) {
     console.error("Error fetching user from Clerk:", error);
     return notFound();
@@ -75,12 +75,11 @@ export default async function BookEventPage({
         )}
       </CardHeader>
       <CardContent>
-        {/* Replace the comment below with the actual MeetingForm component */}
-        {/* <MeetingForm
+         <MeetingForm
           validTimes={validTimes}
           eventId={event.id}
           clerkUserId={clerkUserId}
-        /> */}
+        />
       </CardContent>
     </Card>
   );

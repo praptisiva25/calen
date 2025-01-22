@@ -4,9 +4,9 @@ import {
     CardDescription,
     CardHeader,
     CardTitle,
-  } from "../../../../../../components/ui/card"
+  } from "@/components/ui/card"
   import { db } from "@/drizzle/db"
-  import { formatDateTime } from "../../../../../../lib/formatters"
+  import { formatDateTime } from "@/lib/formatters"
   import { clerkClient } from "@clerk/nextjs/server"
   import { notFound } from "next/navigation"
   
