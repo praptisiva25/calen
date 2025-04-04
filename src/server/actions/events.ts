@@ -7,7 +7,7 @@ import { eventFormSchema } from "../../schema/events"
 import "use-server"
 import {z} from "zod"
 import { redirect } from "next/navigation"
-import { auth } from "@clerk/nextjs/server" // Adjust the import path as necessary
+import { auth } from "@clerk/nextjs/server" 
 
 export async function createEvent( 
     unSafeData: z.infer<typeof eventFormSchema>) :
